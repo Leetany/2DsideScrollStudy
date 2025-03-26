@@ -27,6 +27,22 @@ public class Player : MonoBehaviour
     Rigidbody2D pRig2D;
     SpriteRenderer sp;
 
+    //바닥먼지
+    public GameObject Dust;
+
+    //점프먼지
+    public GameObject JDust;
+
+    //벽점프
+    public Transform wallChk;
+    public float wallchkDistance;
+    public LayerMask wLayer;
+    bool isWall;
+    public float slidingspeed;
+    public float wallJumpPower;
+    public bool isWallJump;
+    float isRight = 1;
+
     void Start()
     {
         pAnimator = GetComponent<Animator>();
@@ -36,21 +52,56 @@ public class Player : MonoBehaviour
 
     }
 
-    
+
     void Update()
     {
-        KeyInput();
-        Move();
 
-        if(Input.GetKeyDown(KeyCode.W))
+        if (!isWallJump)
         {
-            if(pAnimator.GetBool("Jump")==false)
+            KeyInput();
+            Move();
+        }
+
+        //벽인지 체크
+        isWall = Physics2D.Raycast(wallChk.position, Vector2.right * isRight, wallchkDistance, wLayer);
+        pAnimator.SetBool("Grab", isWall);
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            if (pAnimator.GetBool("Jump") == false)
             {
                 Jump();
                 pAnimator.SetBool("Jump", true);
+                Jumpdust();
+            }
+        }
+
+        if (isWall)
+        {
+            isWallJump = false;
+            //벽점프상태
+            pRig2D.linearVelocity = new Vector2(pRig2D.linearVelocityX, pRig2D.linearVelocityY*slidingspeed);
+            //벽을 잡고 있는 상태에서 점프
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                isWallJump = true;
+                //벽점프 먼지
+
+                Invoke("FreezeX", 0.3f);
+                //물리
+                pRig2D.linearVelocity = new Vector2(-isRight * wallJumpPower, 0.9f * wallJumpPower);
+
+                sp.flipX = sp.flipX == false ? true : false;
+                isRight = -isRight;
             }
         }
     }
+
+    void FreezeX()
+    {
+        isWallJump = false;
+    }
+
 
     private void FixedUpdate()
     {
@@ -154,5 +205,23 @@ public class Player : MonoBehaviour
             go.GetComponent<Shadow>().TwSpeed = 10 - sh.Count;
             sh.Add(go);
         }
+    }
+
+    //흙먼지
+    public void LandDust(GameObject dust)
+    {
+        Instantiate(dust, transform.position + new Vector3(0, -0.431f, 0), Quaternion.identity);
+    }
+
+    public void Jumpdust()
+    {
+        Instantiate(JDust, transform.position, Quaternion.identity);
+    }
+
+    //벽점프
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(wallChk.position, Vector2.right * isRight * wallchkDistance);
     }
 }
