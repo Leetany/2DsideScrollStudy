@@ -43,6 +43,8 @@ public class Player : MonoBehaviour
     public bool isWallJump;
     float isRight = 1;
 
+    public GameObject walldust;
+
     void Start()
     {
         pAnimator = GetComponent<Animator>();
@@ -86,6 +88,8 @@ public class Player : MonoBehaviour
             {
                 isWallJump = true;
                 //벽점프 먼지
+                GameObject go = Instantiate(walldust, transform.position + new Vector3(0.8f * isRight, 0, 0), Quaternion.identity);
+                go.GetComponent<SpriteRenderer>().flipX = sp.flipX;
 
                 Invoke("FreezeX", 0.3f);
                 //물리
@@ -108,7 +112,7 @@ public class Player : MonoBehaviour
         Debug.DrawRay(pRig2D.position, Vector3.down, new Color(0, 1, 0));
 
         //레이캐스트로 땅체크
-        RaycastHit2D rayHit = Physics2D.Raycast(pRig2D.position, Vector3.down,1,LayerMask.GetMask("Ground"));
+        RaycastHit2D rayHit = Physics2D.Raycast(pRig2D.position, Vector3.down, 1, LayerMask.GetMask("Ground"));
 
         if(pRig2D.linearVelocityY < 0)
         {
@@ -118,7 +122,21 @@ public class Player : MonoBehaviour
                 {
                     pAnimator.SetBool("Jump", false);
                 }
-            }    
+            }
+            else
+            {
+                //떨어지고 있다
+                if(!isWall)
+                {
+                    //그냥 떨어지는 중
+                    pAnimator.SetBool("Jump", true);
+                }
+                else
+                {
+                    //벽타기
+                    pAnimator.SetBool("Grab", true);
+                }
+            }
         }
     }
 
@@ -215,7 +233,15 @@ public class Player : MonoBehaviour
 
     public void Jumpdust()
     {
-        Instantiate(JDust, transform.position, Quaternion.identity);
+        if (!isWall)
+        {
+            Instantiate(JDust, transform.position, Quaternion.identity);
+        }
+        else
+        {
+            //벽먼지
+            Instantiate(walldust, transform.position, Quaternion.identity);
+        }
     }
 
     //벽점프
@@ -224,4 +250,6 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.DrawRay(wallChk.position, Vector2.right * isRight * wallchkDistance);
     }
+
+    
 }
