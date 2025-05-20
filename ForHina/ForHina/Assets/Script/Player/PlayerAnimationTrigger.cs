@@ -2,16 +2,11 @@ using UnityEngine;
 
 public class PlayerAnimationTrigger : MonoBehaviour
 {
+    private Player player => GetComponentInParent<Player>();
 
-    void Start()
+    private void AnimationTrigger()
     {
-
-    }
-
-
-    void Update()
-    {
-
+        player.AnimationTrigger();
     }
 
     private void FootSound1()
